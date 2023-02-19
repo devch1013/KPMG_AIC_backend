@@ -1,0 +1,4 @@
+ai/main_model/ckpt
+*.pyc
+**/*/__pycache__
+docker_data
