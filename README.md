@@ -1,3 +1,19 @@
+# 2023_KPMG_AIC_FRONTEND
+
+[2023 KPMG Ideathon Challenge - AIC]
+## Backend Part(Django)
+
+
+
+
+
+
+
+
+
+
+
+
 ### Run Server
 ```
 >> docker-compose up -d
