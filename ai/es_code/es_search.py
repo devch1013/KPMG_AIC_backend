@@ -1,6 +1,7 @@
 from elasticsearch import Elasticsearch
 
 es = Elasticsearch(hosts="http://localhost:9200")
+index = "demo1-test-data"
 
 
 def search_es(query):
@@ -8,6 +9,7 @@ def search_es(query):
     """
     질문으로 보고서 context 검색
     """
+    query = query.replace("누구","").replace("어디","").replace("무엇","").replace("얼마","").replace("언제","")
     body = {
         "query": {
             "bool": {
@@ -21,7 +23,7 @@ def search_es(query):
         "from": 0,
         "size": 20,
     }
-    resp = es.search(index="demo1-data", body=body)
+    resp = es.search(index=index, body=body)
     result = []
     for i in resp["hits"]["hits"]:
         result.append({"title": i["_source"]["title"], "context": i["_source"]["context"]})
@@ -42,7 +44,7 @@ def search_es2(query, title):
         "from": 0,
         "size": 5,
     }
-    resp = es.search(index="demo1-data", body=body)
+    resp = es.search(index=index, body=body)
     result = []
     for i in resp["hits"]["hits"]:
         result.append({"title": i["_source"]["title"], "context": i["_source"]["context"]})
@@ -64,7 +66,7 @@ def search_context_with_title(query):
         },
     }
 
-    resp = es.search(index="demo1-data", body=body)
+    resp = es.search(index=index, body=body)
     result = []
     for i in resp["hits"]["hits"]:
         result.append({"title": i["_source"]["title"], "context": i["_source"]["context"]})

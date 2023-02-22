@@ -2,6 +2,7 @@ import torch
 import transformers
 from datetime import datetime
 import re
+import torch.nn.functional as F
 
 
 class QAModel:
@@ -17,6 +18,7 @@ class QAModel:
         )
 
     def predict(self, question, context):
+        context = context.replace("  "," ")
         # Encode the input text
         encoded_input = self.tokenizer(
             question, context, return_tensors="pt", padding=True, truncation=True
@@ -38,11 +40,15 @@ class QAModel:
             )
         # decoding 띄어쓰기 제거
         answer = answer.lstrip(question).replace(" / ", "/").replace("< ", "<").replace(" >", ">")
-        if answer == "" or "##ows" in answer:
+        if answer == "" or answer == "0" or "##ows" in answer:
             return None, None
+        # print("context: ",context)
+        # print("answer: ",answer)
+        # print(context.find(answer))
+        # print(F.softmax(outputs[0], dim=1))
         return {
             "answer": answer,
-            "probability": float(outputs[0][0][answer_start]) + float(outputs[1][0][answer_end]),
+            "probability": float(F.softmax(outputs[0], dim=1)[0][answer_start]) + float(F.softmax(outputs[1], dim=1)[0][answer_end]),
             "answer_start": int(answer_start),
         }, answer_start
 
@@ -63,13 +69,15 @@ class QAModel:
                 answer, answer_start_index = self.predict(question, long_context[tmp_idx:tmp_end])
 
                 if answer is not None:
-                    if "<td>" in answer["answer"]:
+                    # print("answer start index  ", answer_start_index)
+                    # print(long_context[tmp_idx:tmp_end][answer_start_index-5:answer_start_index+1])
+                    if "<td" in answer["answer"]:
                         # 테이블이 잘려나온 경우 전체 테이블 출력
                         print("table")
                         table_start, table_end = find_table_index(
                             tmp_idx + answer_start_index, table_start_tags, table_end_tags
                         )
-                        print(table_start, table_end)
+                        # print(table_start, table_end)
                         if table_start != -1 and table_end != -1:
                             answer["answer"] = long_context[table_start:table_end]
                     result_list.append(answer)
@@ -88,9 +96,7 @@ class QAModel:
 
 def find_table_tags(text):
     table_start_tags = [i.start() for i in re.finditer("<table>", text)]
-    print(table_start_tags)
     table_end_tags = [i.start() + 8 for i in re.finditer("</table>", text)]
-    print(table_end_tags)
 
     return table_start_tags, table_end_tags
 
